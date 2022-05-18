@@ -1,0 +1,46 @@
+@page "/productComments/{productId}"
+
+@inject NavigationManager _navigationManager
+@inject IViewCommentsUseCase _viewCommentsUseCase
+@inject IViewProductsUseCase _viewProductsUseCase
+@inject IViewCustomersUseCase _viewCustomersUseCase
+
+<h3>Product's Comments</h3>
+
+@if (comments is not null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Customer Name</th>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comment in comments)
+            {
+                <tr>
+                    <td>@_viewProductsUseCase.Execute().SingleOrDefault(x=>x.ProductId==comment.ProductId).Name</td>
+                    <td>@_viewCustomersUseCase.Execute().SingleOrDefault(x=>x.CustomerId==comment.CustomerId).Name</td>
+                    <td>@comment.ProductComment</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<br />
+
+@code
+{
+    [Parameter]
+    public string ProductId { get; set; }
+
+    private IEnumerable<Comment> comments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        comments = _viewCommentsUseCase.Execute(Guid.Parse(this.ProductId));
+    }
+}

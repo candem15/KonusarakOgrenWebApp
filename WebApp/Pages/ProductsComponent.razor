@@ -1,0 +1,68 @@
+@page "/products"
+@attribute [Authorize(Policy = "ProductPolicy")]
+@using System.Security.Claims
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor _httpContextAccessor
+
+@inject NavigationManager _navigationManager
+@inject IViewProductsUseCase _viewProductsUseCase
+@inject IViewCategoriesUseCase _viewCategoriesUseCase
+@inject IViewBrandsUseCase _viewBrandsUseCase
+
+
+<h3>Current Role : @user</h3>
+
+<h2>Products</h2>
+
+@if (products is not null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Brand</th>
+                <th>Product Category</th>
+                <th>Product Name</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Model Year</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@_viewBrandsUseCase.Execute().SingleOrDefault(x=>x.BrandId==product.BrandId).Name</td>
+                    <td>@_viewCategoriesUseCase.Execute().SingleOrDefault(x=>x.CategoryId==product.CategoryId).Name</td>
+                    <td>@product.Name</td>
+                    <td>@product.Size</td>
+                    <td>@product.Color</td>
+                    <td>@product.ModelYear</td>
+                    <td>$@product.Price</td>
+                    <td>@product.Quantity</td>
+                    <td><button type="button" @onclick="() => OnClick_SeeComments(product)" class="btn btn-link">See
+                            Comments</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<br />
+@code
+{
+    private List<Product> products;
+
+    private string user = "";
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        user = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(x=>x.Type=="Position").Value; //Current User's Role
+        products = _viewProductsUseCase.Execute().ToList();
+    }
+
+    private void OnClick_SeeComments(Product product)
+    {
+        _navigationManager.NavigateTo($"/productComments/{product.ProductId}");
+    }
+}
